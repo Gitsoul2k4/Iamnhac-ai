@@ -25,7 +25,6 @@ router.post('/like/:id', songController.toggleLike);
 router.put('/user/:id', songController.updateProfile);
 router.delete('/:id', songController.deleteSong);
 router.post('/playlists', songController.createPlaylist); // Khớp với Home.jsx: /api/songs/playlists
-router.get('/playlists/user/:userId', songController.getUserPlaylists);
 router.get('/ranking', songController.getRanking);
 
 module.exports = router;

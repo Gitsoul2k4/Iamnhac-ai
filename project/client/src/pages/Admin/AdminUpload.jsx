@@ -1,64 +1,54 @@
-import React, { useState, useEffect } from 'react';
+import React, { useState } from 'react';
 import axios from 'axios';
-import { useNavigate } from 'react-router-dom';
-import { Upload, ListMusic } from 'lucide-react';
 
 const AdminUpload = () => {
-    const navigate = useNavigate(); 
+    // 1. Khai báo đầy đủ các State
     const [title, setTitle] = useState('');
     const [artist, setArtist] = useState('');
-    const [category, setCategory] = useState('Nhạc trẻ');
+    const [category, setCategory] = useState('Nhạc trẻ'); // Mặc định là Nhạc trẻ
     const [songFile, setSongFile] = useState(null);
     const [imageFile, setImageFile] = useState(null);
     const [loading, setLoading] = useState(false);
 
-    // --- PHẦN MỚI: QUẢN LÝ PLAYLIST ---
-    const [playlists, setPlaylists] = useState([]);
-    const [selectedPlaylist, setSelectedPlaylist] = useState(''); // ID playlist được chọn
-
-    const user = JSON.parse(localStorage.getItem('user'));
-    const currentUserId = user?._id || user?.id;
-
-    useEffect(() => {
-        // Lấy danh sách playlist của user này để hiển thị vào ô chọn
-        if (currentUserId) {
-            axios.get(`http://localhost:5000/api/songs/playlists/user/${currentUserId}`)
-                .then(res => setPlaylists(res.data))
-                .catch(err => console.error("Lỗi lấy playlist:", err));
-        }
-    }, [currentUserId]);
-    // ---------------------------------
-
     const handleUpload = async (e) => {
         e.preventDefault();
         
-        if (!currentUserId) return alert("Vui lòng đăng nhập!");
-        if (!songFile || !imageFile) return alert("Vui lòng chọn đủ file!");
+        // 2. Lấy thông tin user và kiểm tra ID
+        const user = JSON.parse(localStorage.getItem('user'));
+        const currentUserId = user?._id || user?.id; // Chấp nhận cả _id và id
+
+        if (!currentUserId) {
+            alert("Lỗi: Không tìm thấy ID người dùng. Vui lòng đăng xuất và đăng nhập lại!");
+            return;
+        }
+
+        if (!songFile || !imageFile) {
+            alert("Vui lòng chọn đầy đủ file nhạc và file ảnh!");
+            return;
+        }
 
         setLoading(true);
         const formData = new FormData();
         formData.append('title', title);
         formData.append('artist', artist);
-        formData.append('category', category);
+        formData.append('category', category); // Đã có biến category ở đây
         formData.append('songFile', songFile);
         formData.append('imageFile', imageFile);
         formData.append('userId', currentUserId);
-        formData.append('uploaderName', user.username);
-        
-        // Gửi thêm ID của playlist nếu người dùng có chọn
-        if (selectedPlaylist) {
-            formData.append('playlistId', selectedPlaylist);
-        }
+        formData.append('uploaderName', user.username || "Người dùng");
 
         try {
-            const res = await axios.post('http://localhost:5000/api/songs/upload', formData, {
+            await axios.post('http://localhost:5000/api/songs/upload', formData, {
                 headers: { 'Content-Type': 'multipart/form-data' }
             });
-
-            alert('Tải lên thành công!');
-            navigate('/'); 
+            alert('Tải lên thành công bài hát: ' + title);
+            // Reset form sau khi thành công
+            setTitle('');
+            setArtist('');
+            window.location.href = '/'; // Quay về trang chủ
         } catch (err) {
-            alert('Lỗi: ' + (err.response?.data?.message || "Server Error"));
+            console.error(err);
+            alert('Lỗi upload: ' + (err.response?.data?.message || err.message));
         } finally {
             setLoading(false);
         }
@@ -67,51 +57,40 @@ const AdminUpload = () => {
     return (
         <div style={containerStyle}>
             <div style={formBoxStyle}>
-                <h2 style={{ textAlign: 'center', color: '#1db954', marginBottom: '30px' }}>
-                    <Upload size={30} style={{verticalAlign: 'middle', marginRight: '10px'}}/> 
-                    ĐĂNG NHẠC LÊN IAMNHAC
-                </h2>
-                
+                <h2 style={{ textAlign: 'center', color: '#1db954' }}>TẢI LÊN NHẠC MỚI</h2>
                 <form onSubmit={handleUpload}>
                     <div style={inputGroup}>
-                        <label style={labelStyle}>Tên bài hát</label>
-                        <input type="text" value={title} onChange={(e) => setTitle(e.target.value)} required style={inputStyle} placeholder="VD: Lạc Trôi..." />
+                        <label>Tên bài hát:</label>
+                        <input type="text" value={title} onChange={(e) => setTitle(e.target.value)} required style={inputStyle} />
                     </div>
 
                     <div style={inputGroup}>
-                        <label style={labelStyle}>Nghệ sĩ</label>
+                        <label>Ca sĩ:</label>
                         <input type="text" value={artist} onChange={(e) => setArtist(e.target.value)} required style={inputStyle} />
                     </div>
 
-                    {/* Ô CHỌN PLAYLIST MỚI THÊM VÀO */}
                     <div style={inputGroup}>
-                        <label style={labelStyle}><ListMusic size={16}/> Thêm vào Playlist (Tùy chọn)</label>
-                        <select 
-                            value={selectedPlaylist} 
-                            onChange={(e) => setSelectedPlaylist(e.target.value)} 
-                            style={inputStyle}
-                        >
-                            <option value="">-- Không thêm vào playlist nào --</option>
-                            {playlists.map(p => (
-                                <option key={p._id} value={p._id}>{p.title}</option>
-                            ))}
+                        <label>Thể loại:</label>
+                        <select value={category} onChange={(e) => setCategory(e.target.value)} style={inputStyle}>
+                            <option value="Nhạc trẻ">Nhạc trẻ</option>
+                            <option value="Bolero">Bolero</option>
+                            <option value="Remix">Remix</option>
+                            <option value="Lofi">Lofi</option>
                         </select>
-                        <small style={{color: '#888'}}>Nếu chưa có playlist, hãy tạo ở trang chủ trước.</small>
                     </div>
 
-                    <div style={{display: 'grid', gridTemplateColumns: '1fr 1fr', gap: '15px'}}>
-                        <div style={inputGroup}>
-                            <label style={labelStyle}>File nhạc (MP3)</label>
-                            <input type="file" accept="audio/*" onChange={(e) => setSongFile(e.target.files[0])} required />
-                        </div>
-                        <div style={inputGroup}>
-                            <label style={labelStyle}>Ảnh bìa</label>
-                            <input type="file" accept="image/*" onChange={(e) => setImageFile(e.target.files[0])} required />
-                        </div>
+                    <div style={inputGroup}>
+                        <label>File nhạc (MP3):</label>
+                        <input type="file" accept="audio/*" onChange={(e) => setSongFile(e.target.files[0])} required />
+                    </div>
+
+                    <div style={inputGroup}>
+                        <label>Ảnh bìa:</label>
+                        <input type="file" accept="image/*" onChange={(e) => setImageFile(e.target.files[0])} required />
                     </div>
 
                     <button type="submit" disabled={loading} style={btnStyle}>
-                        {loading ? 'ĐANG XỬ LÝ...' : 'XÁC NHẬN ĐĂNG NHẠC'}
+                        {loading ? 'Đang tải lên...' : 'BẮT ĐẦU TẢI LÊN'}
                     </button>
                 </form>
             </div>
@@ -119,12 +98,11 @@ const AdminUpload = () => {
     );
 };
 
-// Styles (Giữ nguyên và tối ưu một chút)
-const containerStyle = { display: 'flex', justifyContent: 'center', padding: '50px 20px', background: '#f0f2f5', minHeight: '90vh' };
-const formBoxStyle = { background: '#fff', padding: '40px', borderRadius: '20px', boxShadow: '0 10px 40px rgba(0,0,0,0.1)', width: '100%', maxWidth: '600px' };
-const inputGroup = { marginBottom: '20px', display: 'flex', flexDirection: 'column', gap: '8px' };
-const labelStyle = { fontWeight: 'bold', fontSize: '14px', display: 'flex', alignItems: 'center', gap: '5px' };
-const inputStyle = { padding: '12px', borderRadius: '10px', border: '1px solid #ddd', fontSize: '15px' };
-const btnStyle = { width: '100%', padding: '16px', background: '#1db954', color: '#fff', border: 'none', borderRadius: '30px', fontWeight: 'bold', cursor: 'pointer', fontSize: '16px', marginTop: '10px' };
+// --- CSS STYLES ---
+const containerStyle = { display: 'flex', justifyContent: 'center', padding: '50px 20px', background: '#f4f4f4', minHeight: '90vh' };
+const formBoxStyle = { background: '#fff', padding: '30px', borderRadius: '15px', boxShadow: '0 10px 25px rgba(0,0,0,0.1)', width: '100%', maxWidth: '500px' };
+const inputGroup = { marginBottom: '15px', display: 'flex', flexDirection: 'column', gap: '5px' };
+const inputStyle = { padding: '10px', borderRadius: '5px', border: '1px solid #ddd' };
+const btnStyle = { width: '100%', padding: '12px', background: '#1db954', color: '#fff', border: 'none', borderRadius: '25px', fontWeight: 'bold', cursor: 'pointer', marginTop: '10px' };
 
 export default AdminUpload;
