@@ -5,6 +5,7 @@ const path = require('path');
 const connectDB = require('./src/config/db');
 const authRoutes = require('./src/routes/authRoutes');
 const songRoutes = require('./src/routes/songRoutes'); // Kiểm tra dòng này
+const aiRoutes = require('./src/routes/aiRoutes'); // === AI AGENT: Gợi ý nhạc bằng Gemini 2.5 Pro ===
 
 dotenv.config();
 connectDB();
@@ -19,6 +20,7 @@ app.use('/uploads', express.static(path.join(__dirname, 'uploads')));
 // Routes
 app.use('/api/auth', authRoutes);
 app.use('/api/songs', songRoutes); // Đảm bảo CÓ dòng này để nhận file upload
+app.use('/api/ai', aiRoutes); // Đảm bảo CÓ dòng này để dùng AI Agent gợi ý nhạc
 
 const PORT = process.env.PORT || 5000;
 app.listen(PORT, () => console.log('Server dang chay tai port ' + PORT));

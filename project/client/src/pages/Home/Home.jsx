@@ -2,14 +2,15 @@ import React, { useEffect, useState } from 'react';
 import axios from 'axios';
 import { useMusic } from '../../context/MusicContext'; // Import context
 import { Heart, ListPlus, Play, Music, CheckCircle2, Circle, X } from 'lucide-react';
+import AIRecommendations from '../../components/Recommendations/AIRecommendations'; // === AI AGENT: khối gợi ý ===
 
 const Home = () => {
   const [songs, setSongs] = useState([]);
   
-  // Lấy các hàm điều khiển nhạc từ Context
+  // Lấy các hàm điều khiển khi nhạc từ Context
   const { playMusic, currentSong } = useMusic();
   
-  // --- States cho chức năng tạo Playlist (Giữ nguyên của bạn) ---
+  // --- States cho chức năng năng tạo Playlist (Giữ nguyên của bạn) ---
   const [isSelecting, setIsSelecting] = useState(false);
   const [newPlaylistTitle, setNewPlaylistTitle] = useState("");
   const [selectedSongIds, setSelectedSongIds] = useState([]);
@@ -27,6 +28,8 @@ const Home = () => {
     } catch (err) { console.error("Lỗi tải nhạc:", err); }
   };
 
+  // Lưu ý: không cần ghi thêm log riêng cho AI Agent ở đây vì hành động
+  // Like đã tự được lưu vào Song.likes (Explicit Feedback) ngay khi gọi API này.
   const handleLike = async (songId) => {
     if (!loggedInUser) return alert("Vui lòng đăng nhập!");
     try {
@@ -71,6 +74,7 @@ const Home = () => {
   };
 
   // HÀM QUAN TRỌNG: Gọi bộ phát nhạc toàn cục
+  // (Việc ghi nhận thói quen "nghe" cho AI Agent đã được xử lý tập trung trong MusicContext)
   const handlePlaySong = (index) => {
     if (isSelecting) {
       toggleSongSelection(songs[index]._id);
@@ -107,6 +111,9 @@ const Home = () => {
           </button>
         </div>
       )}
+
+      {/* === AI AGENT: KHỐI GỢI Ý NHẠC CÁ NHÂN HÓA === */}
+      {!isSelecting && <AIRecommendations />}
 
       {/* GRID NHẠC */}
       <div style={{ display: 'grid', gridTemplateColumns: 'repeat(auto-fill, minmax(220px, 1fr))', gap: '30px', marginTop: isSelecting ? '100px' : '0' }}>

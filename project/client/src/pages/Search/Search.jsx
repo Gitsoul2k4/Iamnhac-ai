@@ -11,6 +11,8 @@ const Search = () => {
   const { playMusic } = useMusic(); // Lấy hàm phát nhạc
   const navigate = useNavigate();
 
+  const loggedInUser = JSON.parse(localStorage.getItem('user'));
+
   const handleSearch = async (e) => {
     const value = e.target.value;
     setSearchQuery(value);
@@ -19,7 +21,8 @@ const Search = () => {
       try {
         const res = await axios.get(`http://localhost:5000/api/songs/search?q=${value}`);
         setResults(res.data);
-      } catch (err) { console.error(err); } 
+
+        } catch (err) { console.error(err); } 
       finally { setLoading(false); }
     } else {
       setResults([]);
@@ -69,7 +72,7 @@ const Search = () => {
         ) : searchQuery && (
           <div style={{ textAlign: 'center', marginTop: '100px' }}>
             <XCircle size={60} color="#ccc" />
-            <p>Không tìm thấy kết quả cho "{searchQuery}"</p>
+            <p>Không tìm thấy kết quả nào cho "{searchQuery}"</p>
           </div>
         )}
       </div>

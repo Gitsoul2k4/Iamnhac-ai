@@ -4,6 +4,7 @@ import { BrowserRouter as Router, Routes, Route, Link, useParams, Navigate } fro
 // --- BƯỚC QUAN TRỌNG: IMPORT CONTEXT VÀ PLAYER ---
 import { MusicProvider } from './context/MusicContext'; // Đảm bảo đúng đường dẫn tới file MusicContext.js
 import GlobalPlayer from './components/GlobalPlayer';   // Đảm bảo đúng đường dẫn tới file GlobalPlayer.jsx
+import MoodBubble from './components/MoodBubble/MoodBubble'; // === AI AGENT: bubble khai báo tâm trạng (Nhóm 3) ===
 
 // --- IMPORT CÁC TRANG ---
 import Home from './pages/Home/Home';
@@ -107,6 +108,9 @@ function App() {
 
           {/* TRÌNH PHÁT NHẠC LUÔN HIỂN THỊ Ở ĐÂY */}
           <GlobalPlayer />
+
+          {/* === AI AGENT: Bubble khai báo tâm trạng - hiển thị trên MỌI trang === */}
+          <MoodBubble />
 
           <footer style={footerStyle}>
             <p><b>IAMNHAC MUSIC</b></p>
