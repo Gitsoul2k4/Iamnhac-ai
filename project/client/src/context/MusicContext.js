@@ -1,5 +1,5 @@
 import React, { createContext, useState, useRef, useContext } from 'react';
-import { logPlay } from '../api/aiApi'; // === AI AGENT: ghi nhận "lượt nghe" (Explicit Feedback) ===
+// === AI AGENT: đã bỏ import logPlay — không còn theo dõi lượt nghe nữa ===
 
 const MusicContext = createContext();
 
@@ -10,23 +10,14 @@ export const MusicProvider = ({ children }) => {
   const [currentSong, setCurrentSong] = useState(null);
   const audioRef = useRef(null);
 
-  // Hàm kích hoạt phát nhạc từ bất kỳ đâu (Home, Search, AIRecommendations...)
+  // Hàm kích hoạt phát nhạc từ bất kỳ đâu (Home, Search, bubble chat AI Agent...)
   const playMusic = (songList, index) => {
     const song = songList[index];
     setSongs(songList);
     setCurrentIndex(index);
     setCurrentSong(song);
     setIsPlaying(true);
-
-    // === GHI NHẬN THÓI QUEN CHO AI AGENT (Nhóm 2 - Explicit Feedback) ===
-    // Đây là điểm duy nhất xử lý phát nhạc trong toàn app nên đặt log "play" ở đây
-    // để không phải thêm lại ở từng trang (Home, Search, Ranking, Profile...).
-    const loggedInUser = JSON.parse(localStorage.getItem('user'));
-    const userId = loggedInUser?._id || loggedInUser?.id;
-    if (userId && song) {
-      logPlay({ userId, songId: song._id });
-    }
-    // Lưu ý: Việc thực hiện audioRef.current.play() sẽ được xử lý bằng useEffect trong GlobalPlayer
+    // Lưu ý: audioRef.current.play() sẽ được xử lý bằng useEffect trong GlobalPlayer
   };
 
   const togglePlay = () => {
@@ -50,9 +41,9 @@ export const MusicProvider = ({ children }) => {
   };
 
   return (
-    <MusicContext.Provider value={{ 
-      songs, currentSong, isPlaying, setIsPlaying, currentIndex, 
-      audioRef, playMusic, togglePlay, handleNext, handlePrev 
+    <MusicContext.Provider value={{
+      songs, currentSong, isPlaying, setIsPlaying, currentIndex,
+      audioRef, playMusic, togglePlay, handleNext, handlePrev
     }}>
       {children}
     </MusicContext.Provider>

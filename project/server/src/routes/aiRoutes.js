@@ -2,17 +2,12 @@ const express = require('express');
 const router = express.Router();
 const aiController = require('../controllers/aiController');
 
-// NHÓM 1 (Temporal Context): không cần API riêng, được tính tự động ngay
-// lúc gợi ý (xem hàm getRecommendations / getTemporalContext).
+// === AI AGENT: chỉ còn lại đúng 1 kênh giao tiếp — bubble chat ===
+// (Đã bỏ /play và /mood của bản trước — không còn theo dõi thời gian
+// truy cập hay lượt Like để nuôi AI Agent nữa.)
 
-// NHÓM 2 (Explicit Feedback) - ghi nhận lượt NGHE.
-// (Lượt LIKE đã có sẵn ở route /api/songs/like/:id, không cần thêm ở đây)
-router.post('/play', aiController.logPlay);
-
-// NHÓM 3 (Prompt-based Mood) - ghi nhận tâm trạng người dùng tự nhập
-router.post('/mood', aiController.setMood);
-
-// Lấy gợi ý nhạc do AI Agent (Gemini 2.5 Pro) phân tích
-router.get('/recommendations/:userId', aiController.getRecommendations);
+router.post('/chat', aiController.sendMessage);          // Gửi tin nhắn, nhận trả lời + gợi ý nhạc
+router.get('/chat/:userId', aiController.getHistory);    // Lấy lại lịch sử trò chuyện
+router.delete('/chat/:userId', aiController.clearHistory); // Xoá lịch sử, bắt đầu hội thoại mới
 
 module.exports = router;

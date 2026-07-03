@@ -2,15 +2,17 @@ import React, { useEffect, useState } from 'react';
 import axios from 'axios';
 import { useMusic } from '../../context/MusicContext'; // Import context
 import { Heart, ListPlus, Play, Music, CheckCircle2, Circle, X } from 'lucide-react';
-import AIRecommendations from '../../components/Recommendations/AIRecommendations'; // === AI AGENT: khối gợi ý ===
+// === AI AGENT: đã bỏ import AIRecommendations — khối "Gợi ý dành cho bạn" dựa
+// trên giờ giấc/lượt nghe/lượt like không còn nữa. AI Agent giờ chỉ hoạt động
+// qua bubble chat (xem components/MoodBubble/MoodBubble.jsx) ===
 
 const Home = () => {
   const [songs, setSongs] = useState([]);
   
-  // Lấy các hàm điều khiển khi nhạc từ Context
+// Lấy các hàm điều khiển khi nhạc từ Context
   const { playMusic, currentSong } = useMusic();
   
-  // --- States cho chức năng năng tạo Playlist (Giữ nguyên của bạn) ---
+// --- States cho chức năng năng tạo Playlist (Giữ nguyên của bạn) ---
   const [isSelecting, setIsSelecting] = useState(false);
   const [newPlaylistTitle, setNewPlaylistTitle] = useState("");
   const [selectedSongIds, setSelectedSongIds] = useState([]);
@@ -28,8 +30,6 @@ const Home = () => {
     } catch (err) { console.error("Lỗi tải nhạc:", err); }
   };
 
-  // Lưu ý: không cần ghi thêm log riêng cho AI Agent ở đây vì hành động
-  // Like đã tự được lưu vào Song.likes (Explicit Feedback) ngay khi gọi API này.
   const handleLike = async (songId) => {
     if (!loggedInUser) return alert("Vui lòng đăng nhập!");
     try {
@@ -74,7 +74,6 @@ const Home = () => {
   };
 
   // HÀM QUAN TRỌNG: Gọi bộ phát nhạc toàn cục
-  // (Việc ghi nhận thói quen "nghe" cho AI Agent đã được xử lý tập trung trong MusicContext)
   const handlePlaySong = (index) => {
     if (isSelecting) {
       toggleSongSelection(songs[index]._id);
@@ -85,8 +84,8 @@ const Home = () => {
 
   return (
     <div style={{ padding: '30px', maxWidth: '1200px', margin: '0 auto', fontFamily: 'Arial, sans-serif', paddingBottom: '120px' }}>
-      
-      {/* SELECTION BAR (Khi đang tạo playlist) */}
+    
+{/* SELECTION BAR (Khi đang tạo playlist) */}
       {isSelecting && (
         <div style={selectionBarStyle}>
           <div style={{ display: 'flex', alignItems: 'center', gap: '20px' }}>
@@ -112,21 +111,18 @@ const Home = () => {
         </div>
       )}
 
-      {/* === AI AGENT: KHỐI GỢI Ý NHẠC CÁ NHÂN HÓA === */}
-      {!isSelecting && <AIRecommendations />}
-
       {/* GRID NHẠC */}
       <div style={{ display: 'grid', gridTemplateColumns: 'repeat(auto-fill, minmax(220px, 1fr))', gap: '30px', marginTop: isSelecting ? '100px' : '0' }}>
         {songs.map((song, index) => {
           const isSelected = selectedSongIds.includes(song._id);
           const isCurrentPlaying = currentSong?._id === song._id;
           
-          return (
+return (
             <div 
-              key={song._id} 
-              style={{
+key={song._id} 
+style={{
                 ...songCard, 
-                border: isSelected ? '3px solid #1db954' : (isCurrentPlaying ? '3px solid #1db954' : '3px solid transparent'),
+border: isSelected ? '3px solid #1db954' : (isCurrentPlaying ? '3px solid #1db954' : '3px solid transparent'),
                 transform: isSelected ? 'scale(1.02)' : 'scale(1)'
               }}
               onClick={() => handlePlaySong(index)}
@@ -134,9 +130,9 @@ const Home = () => {
               <div style={{ position: 'relative' }}>
                 <img src={`http://localhost:5000${song.imageUrl}`} alt={song.title} style={imgStyle} />
                 {isSelecting ? (
-                   <div style={checkIconContainer}>
-                     {isSelected ? <CheckCircle2 color="#1db954" fill="white" size={32}/> : <Circle color="#ccc" size={32}/>}
-                   </div>
+                  <div style={checkIconContainer}>
+                    {isSelected ? <CheckCircle2 color="#1db954" fill="white" size={32}/> : <Circle color="#ccc" size={32}/>}
+                  </div>
                 ) : (
                   <button style={playOverlayBtn}>
                     <Play fill="white" size={20} />
@@ -146,10 +142,10 @@ const Home = () => {
               <h3 style={{ margin: '15px 0 5px 0', fontSize: '17px', fontWeight: 'bold' }}>{song.title}</h3>
               <p style={{ color: '#666', fontSize: '14px', margin: '0 0 12px 0' }}>{song.artist}</p>
               
-              {!isSelecting && (
+{!isSelecting && (
                 <button onClick={(e) => { e.stopPropagation(); handleLike(song._id); }} style={likeBtnStyle}>
-                    <Heart size={20} fill={song.likes?.includes(loggedInUser?._id) ? "red" : "none"} color={song.likes?.includes(loggedInUser?._id) ? "red" : "#666"} />
-                    <span style={{ fontWeight: 'bold' }}>{song.likes?.length || 0}</span>
+                  <Heart size={20} fill={song.likes?.includes(loggedInUser?._id) ? "red" : "none"} color={song.likes?.includes(loggedInUser?._id) ? "red" : "#666"} />
+                  <span style={{ fontWeight: 'bold' }}>{song.likes?.length || 0}</span>
                 </button>
               )}
             </div>

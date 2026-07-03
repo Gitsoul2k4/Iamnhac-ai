@@ -15,9 +15,15 @@ const songSchema = new mongoose.Schema({
   // AdminUpload.jsx ĐÃ có sẵn ô chọn "Thể loại" và đã gửi field "category"
   // lên backend (formData.append('category', ...)) từ trước, nhưng model gốc
   // chưa khai báo field này nên Mongoose âm thầm bỏ qua khi lưu (strict mode).
-  // Thêm dòng dưới để dữ liệu "Thể loại" được lưu thật, phục vụ AI Agent
-  // thống kê "Thể loại nghe nhiều nhất" (Explicit Feedback).
-  category: { type: String, default: 'Khác' }
+  category: { type: String, default: 'Khác' },
+
+  // === MACHINE LEARNING (mới) ===
+  // Vector embedding (nhúng ngữ nghĩa) của "title - artist - category", được
+  // tính bằng Gemini Embedding API và LƯU CACHE lại ở đây để không phải gọi
+  // API lại mỗi lần gợi ý. AI Agent dùng vector này để so khớp bằng thuật
+  // toán Cosine Similarity / k-Nearest Neighbors với ngữ cảnh chat của người
+  // dùng (xem server/src/services/mlService.js).
+  embedding: { type: [Number], default: [] }
 });
 
 module.exports = mongoose.model('Song', songSchema);

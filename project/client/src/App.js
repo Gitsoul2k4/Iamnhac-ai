@@ -114,7 +114,7 @@ function App() {
 
           <footer style={footerStyle}>
             <p><b>IAMNHAC MUSIC</b></p>
-            <p>© 2025 - Nền tảng âm nhạc trực tuyến cho cộng đồng</p>
+            <p>© 2026 - Nền tảng âm nhạc trực tuyến cho cộng đồng</p>
           </footer>
         </div>
       </Router>
