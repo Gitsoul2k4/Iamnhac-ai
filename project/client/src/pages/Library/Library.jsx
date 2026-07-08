@@ -2,6 +2,7 @@ import React, { useEffect, useState } from 'react';
 import axios from 'axios';
 import { useParams, useNavigate } from 'react-router-dom';
 import { Music, ListMusic, PlayCircle, PlusCircle, Trash2 } from 'lucide-react';
+import { useNotification } from '../../components/NotificationProvider';
 
 const Library = () => {
     const { userId } = useParams();
@@ -9,6 +10,7 @@ const Library = () => {
     const [loading, setLoading] = useState(true);
     const navigate = useNavigate();
     const loggedInUser = JSON.parse(localStorage.getItem('user'));
+    const { notify, showConfirm } = useNotification();
 
     useEffect(() => {
         fetchUserPlaylists();
@@ -18,7 +20,7 @@ const Library = () => {
         try {
             setLoading(true);
             // Gọi API lấy danh sách playlist của User
-            const res = await axios.get(`http://localhost:5000/api/songs/playlists/user/${userId}`);
+            const res = await axios.get(`http://localhost:5000/api/playlists/user/${userId}`);
             setPlaylists(res.data);
         } catch (err) {
             console.error("Lỗi tải playlist:", err);
@@ -29,15 +31,30 @@ const Library = () => {
 
     const handleDeletePlaylist = async (e, playlistId) => {
         e.stopPropagation(); // Ngăn sự kiện click vào card
-        if (!window.confirm("Bạn có chắc chắn muốn xóa playlist này?")) return;
+        const shouldDelete = await showConfirm({
+            type: 'danger',
+            title: 'Xoá playlist?',
+            message: 'Playlist sẽ bị xoá khỏi thư viện của bạn. Thao tác này không thể hoàn tác.',
+            confirmText: 'Xoá playlist',
+            cancelText: 'Giữ lại'
+        });
+        if (!shouldDelete) return;
         
         try {
             await axios.delete(`http://localhost:5000/api/playlists/${playlistId}`);
             setPlaylists(playlists.filter(p => p._id !== playlistId));
-            alert("Đã xóa playlist thành công!");
+            notify({
+                type: 'success',
+                title: 'Đã xoá playlist',
+                message: 'Thư viện của bạn đã được cập nhật.'
+            });
         } catch (err) {
             console.error("Lỗi khi xóa playlist:", err);
-        alert("Không thể xóa playlist. Vui lòng kiểm tra lại Backend.");
+            notify({
+                type: 'error',
+                title: 'Không thể xoá playlist',
+                message: 'Vui lòng kiểm tra backend hoặc thử lại sau.'
+            });
         }
     };
 

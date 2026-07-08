@@ -40,10 +40,33 @@ export const MusicProvider = ({ children }) => {
     setCurrentSong(songs[prevIndex]);
   };
 
+  const updatePlaylist = (nextSongs = []) => {
+    setSongs(nextSongs);
+
+    if (nextSongs.length === 0) {
+      setCurrentIndex(-1);
+      setCurrentSong(null);
+      setIsPlaying(false);
+      return;
+    }
+
+    const currentSongIndex = currentSong
+      ? nextSongs.findIndex((song) => song._id === currentSong._id)
+      : -1;
+    if (currentSongIndex !== -1) {
+      setCurrentIndex(currentSongIndex);
+      return;
+    }
+
+    const fallbackIndex = Math.min(Math.max(currentIndex, 0), nextSongs.length - 1);
+    setCurrentIndex(fallbackIndex);
+    setCurrentSong(nextSongs[fallbackIndex]);
+  };
+
   return (
     <MusicContext.Provider value={{
       songs, currentSong, isPlaying, setIsPlaying, currentIndex,
-      audioRef, playMusic, togglePlay, handleNext, handlePrev
+      audioRef, playMusic, togglePlay, handleNext, handlePrev, updatePlaylist
     }}>
       {children}
     </MusicContext.Provider>

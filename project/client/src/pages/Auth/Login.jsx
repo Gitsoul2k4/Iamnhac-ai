@@ -2,11 +2,13 @@ import React, { useState } from 'react';
 import axios from 'axios'; 
 import { useNavigate, Link } from 'react-router-dom'; 
 import '../../styles/Auth.css'; 
+import { useNotification } from '../../components/NotificationProvider';
  
 const Login = () => { 
     const [formData, setFormData] = useState({ email: '', password: '' }); 
     const [error, setError] = useState(''); 
     const navigate = useNavigate(); 
+    const { notify } = useNotification();
  
     const handleChange = (e) => { 
         setFormData({ ...formData, [e.target.name]: e.target.value }); 
@@ -18,8 +20,13 @@ const Login = () => {
             const res = await axios.post('http://localhost:5000/api/auth/login', formData); 
             localStorage.setItem('token', res.data.token); 
             localStorage.setItem('user', JSON.stringify(res.data.user)); 
-            alert('Dang nhap thanh cong!'); 
-            window.location.href = '/'; 
+            window.dispatchEvent(new Event('storage'));
+            notify({
+                type: 'success',
+                title: 'Đăng nhập thành công',
+                message: 'Chào mừng bạn quay lại IAMNHAC.'
+            });
+            navigate('/'); 
         } catch (err) { 
             setError(err.response ? err.response.data.message : 'Sai thong tin dang nhap'); 
         } 

@@ -2,6 +2,7 @@ import React, { useEffect, useState } from 'react';
 import axios from 'axios';
 import { useParams, useNavigate } from 'react-router-dom';
 import { Music, Heart, Trash2, Play, User as UserIcon, Calendar } from 'lucide-react';
+import { useNotification } from '../../components/NotificationProvider';
 
 const Profile = () => {
   const { userId } = useParams();
@@ -9,6 +10,7 @@ const Profile = () => {
   const [user, setUser] = useState(null);
   const [songs, setSongs] = useState([]);
   const loggedInUser = JSON.parse(localStorage.getItem('user'));
+  const { notify, showConfirm } = useNotification();
 
   // Kiểm tra xem đây có phải là trang của chính người đang đăng nhập không
   const isOwner = loggedInUser?._id === userId || loggedInUser?.id === userId;
@@ -26,14 +28,26 @@ const Profile = () => {
   }, [userId]);
 
   const handleDelete = async (songId) => {
-    if (!window.confirm("Bạn có chắc muốn xóa bài hát này?")) return;
+    const shouldDelete = await showConfirm({
+      type: 'danger',
+      title: 'Xoá bài hát?',
+      message: 'Bài hát sẽ bị xoá khỏi hồ sơ và danh sách nhạc.',
+      confirmText: 'Xoá bài hát',
+      cancelText: 'Giữ lại'
+    });
+    if (!shouldDelete) return;
+
     try {
       await axios.delete(`http://localhost:5000/api/songs/${songId}`, {
         data: { userId: loggedInUser._id, role: loggedInUser.role }
       });
       setSongs(songs.filter(s => s._id !== songId));
     } catch (err) {
-      alert("Không thể xóa bài hát!");
+      notify({
+        type: 'error',
+        title: 'Không thể xoá bài hát',
+        message: 'Vui lòng thử lại sau.'
+      });
     }
   };
 

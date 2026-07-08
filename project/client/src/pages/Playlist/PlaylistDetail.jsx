@@ -3,11 +3,14 @@ import { useParams, useNavigate } from 'react-router-dom';
 import axios from 'axios';
 import { Play, Trash2, Music, ArrowLeft, Clock, User } from 'lucide-react';
 import { useMusic } from '../../context/MusicContext'; // Giả định bạn có context này để phát nhạc
+import { useNotification } from '../../components/NotificationProvider';
 
 const PlaylistDetail = () => {
-  const { id } = useParams();
+  const { playlistId } = useParams();
+  const id = playlistId;
   const navigate = useNavigate();
   const { playMusic } = useMusic(); // Lấy hàm phát nhạc từ context
+  const { notify, showConfirm } = useNotification();
   
   const [playlist, setPlaylist] = useState(null);
   const [loading, setLoading] = useState(true);
@@ -38,7 +41,14 @@ const PlaylistDetail = () => {
 
 const handleRemoveSong = async (e, songId) => {
   e.stopPropagation();
-  if (!window.confirm("Xóa bài này khỏi playlist?")) return;
+  const shouldRemove = await showConfirm({
+    type: 'danger',
+    title: 'Xoá bài khỏi playlist?',
+    message: 'Bài hát sẽ chỉ bị gỡ khỏi playlist này, không bị xoá khỏi hệ thống.',
+    confirmText: 'Xoá khỏi playlist',
+    cancelText: 'Giữ lại'
+  });
+  if (!shouldRemove) return;
 
   try {
     // 1. Gọi API xóa
@@ -52,9 +62,17 @@ const handleRemoveSong = async (e, songId) => {
     // Nếu bài vừa xóa nằm trong danh sách đang phát thì cập nhật context
     updatePlaylist(updatedSongs);
 
-    alert("Đã xóa bài hát!");
+    notify({
+      type: 'success',
+      title: 'Đã xoá bài hát',
+      message: 'Playlist đã được cập nhật.'
+    });
   } catch (err) {
-    alert("Lỗi khi xóa bài hát");
+    notify({
+      type: 'error',
+      title: 'Không thể xoá bài hát',
+      message: 'Vui lòng thử lại sau.'
+    });
   }
 };
 

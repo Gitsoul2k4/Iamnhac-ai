@@ -2,11 +2,13 @@ import React, { useState } from 'react';
 import axios from 'axios'; 
 import { useNavigate, Link } from 'react-router-dom'; 
 import '../../styles/Auth.css'; 
+import { useNotification } from '../../components/NotificationProvider';
  
 const Register = () => { 
     const [formData, setFormData] = useState({ username: '', email: '', password: '' }); 
     const [error, setError] = useState(''); 
     const navigate = useNavigate(); 
+    const { notify } = useNotification();
  
     const handleChange = (e) => { 
         setFormData({ ...formData, [e.target.name]: e.target.value }); 
@@ -16,7 +18,11 @@ const Register = () => {
         e.preventDefault(); 
         try { 
             await axios.post('http://localhost:5000/api/auth/register', formData); 
-            alert('Dang ky thanh cong! Hay dang nhap.'); 
+            notify({
+                type: 'success',
+                title: 'Đăng ký thành công',
+                message: 'Bạn có thể đăng nhập bằng tài khoản vừa tạo.'
+            });
             navigate('/login'); 
         } catch (err) { 
             setError(err.response ? err.response.data.message : 'Loi ket noi Server'); 

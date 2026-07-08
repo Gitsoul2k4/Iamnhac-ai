@@ -2,6 +2,7 @@ import React, { useEffect, useState } from 'react';
 import axios from 'axios';
 import { useMusic } from '../../context/MusicContext'; // Import context
 import { Heart, ListPlus, Play, Music, CheckCircle2, Circle, X } from 'lucide-react';
+import { useNotification } from '../../components/NotificationProvider';
 // === AI AGENT: đã bỏ import AIRecommendations — khối "Gợi ý dành cho bạn" dựa
 // trên giờ giấc/lượt nghe/lượt like không còn nữa. AI Agent giờ chỉ hoạt động
 // qua bubble chat (xem components/MoodBubble/MoodBubble.jsx) ===
@@ -11,6 +12,7 @@ const Home = () => {
   
 // Lấy các hàm điều khiển khi nhạc từ Context
   const { playMusic, currentSong } = useMusic();
+  const { notify, showConfirm, showPrompt } = useNotification();
   
 // --- States cho chức năng năng tạo Playlist (Giữ nguyên của bạn) ---
   const [isSelecting, setIsSelecting] = useState(false);
@@ -31,7 +33,14 @@ const Home = () => {
   };
 
   const handleLike = async (songId) => {
-    if (!loggedInUser) return alert("Vui lòng đăng nhập!");
+    if (!loggedInUser) {
+      notify({
+        type: 'warning',
+        title: 'Cần đăng nhập',
+        message: 'Vui lòng đăng nhập để thả tim bài hát.'
+      });
+      return;
+    }
     try {
       const res = await axios.post(`http://localhost:5000/api/songs/like/${songId}`, {
         userId: loggedInUser._id || loggedInUser.id
@@ -40,9 +49,25 @@ const Home = () => {
     } catch (err) { console.error(err); }
   };
 
-  const handleStartCreatePlaylist = () => {
-    if (!loggedInUser) return alert("Vui lòng đăng nhập!");
-    const title = prompt("Nhập tên cho Playlist mới tại IAMNHAC:");
+  const handleStartCreatePlaylist = async () => {
+    if (!loggedInUser) {
+      notify({
+        type: 'warning',
+        title: 'Cần đăng nhập',
+        message: 'Vui lòng đăng nhập để tạo playlist cá nhân.'
+      });
+      return;
+    }
+
+    const title = await showPrompt({
+      type: 'info',
+      title: 'Tạo playlist mới',
+      message: 'Đặt tên cho playlist, sau đó chọn các bài hát muốn lưu.',
+      placeholder: 'Tên playlist',
+      confirmText: 'Bắt đầu chọn',
+      cancelText: 'Huỷ'
+    });
+
     if (!title) return;
     setNewPlaylistTitle(title);
     setIsSelecting(true);
@@ -59,18 +84,35 @@ const Home = () => {
 
   const handleSavePlaylist = async () => {
     if (selectedSongIds.length === 0) {
-      if (!window.confirm("Bạn chưa chọn bài hát nào. Vẫn muốn tạo playlist trống?")) return;
+      const shouldCreateEmpty = await showConfirm({
+        type: 'warning',
+        title: 'Tạo playlist trống?',
+        message: 'Bạn chưa chọn bài hát nào. Playlist sẽ được tạo trước và có thể thêm nhạc sau.',
+        confirmText: 'Vẫn tạo',
+        cancelText: 'Chọn thêm'
+      });
+      if (!shouldCreateEmpty) return;
     }
     try {
-      await axios.post('http://localhost:5000/api/songs/playlists', {
+      await axios.post('http://localhost:5000/api/playlists', {
         title: newPlaylistTitle,
         userId: loggedInUser._id || loggedInUser.id,
-        songIds: selectedSongIds
+        songs: selectedSongIds
       });
-      alert(`Thành công! IAMNHAC đã tạo playlist "${newPlaylistTitle}"`);
+      notify({
+        type: 'success',
+        title: 'Đã tạo playlist',
+        message: `IAMNHAC đã tạo playlist "${newPlaylistTitle}".`
+      });
       setIsSelecting(false);
       setSelectedSongIds([]);
-    } catch (err) { alert("Lỗi khi lưu Playlist."); }
+    } catch (err) {
+      notify({
+        type: 'error',
+        title: 'Không thể lưu playlist',
+        message: 'Vui lòng thử lại sau.'
+      });
+    }
   };
 
   // HÀM QUAN TRỌNG: Gọi bộ phát nhạc toàn cục

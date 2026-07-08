@@ -1,5 +1,7 @@
 import React, { useState } from 'react';
 import axios from 'axios';
+import { useNavigate } from 'react-router-dom';
+import { useNotification } from '../../components/NotificationProvider';
 
 const AdminUpload = () => {
     // 1. Khai báo đầy đủ các State
@@ -9,6 +11,8 @@ const AdminUpload = () => {
     const [songFile, setSongFile] = useState(null);
     const [imageFile, setImageFile] = useState(null);
     const [loading, setLoading] = useState(false);
+    const navigate = useNavigate();
+    const { notify } = useNotification();
 
     const handleUpload = async (e) => {
         e.preventDefault();
@@ -18,12 +22,20 @@ const AdminUpload = () => {
         const currentUserId = user?._id || user?.id; // Chấp nhận cả _id và id
 
         if (!currentUserId) {
-            alert("Lỗi: Không tìm thấy ID người dùng. Vui lòng đăng xuất và đăng nhập lại!");
+            notify({
+                type: 'error',
+                title: 'Không tìm thấy người dùng',
+                message: 'Vui lòng đăng xuất rồi đăng nhập lại.'
+            });
             return;
         }
 
         if (!songFile || !imageFile) {
-            alert("Vui lòng chọn đầy đủ file nhạc và file ảnh!");
+            notify({
+                type: 'warning',
+                title: 'Thiếu file tải lên',
+                message: 'Vui lòng chọn đầy đủ file nhạc và ảnh bìa.'
+            });
             return;
         }
 
@@ -41,14 +53,22 @@ const AdminUpload = () => {
             await axios.post('http://localhost:5000/api/songs/upload', formData, {
                 headers: { 'Content-Type': 'multipart/form-data' }
             });
-            alert('Tải lên thành công bài hát: ' + title);
+            notify({
+                type: 'success',
+                title: 'Tải lên thành công',
+                message: `Bài hát "${title}" đã được thêm vào IAMNHAC.`
+            });
             // Reset form sau khi thành công
             setTitle('');
             setArtist('');
-            window.location.href = '/'; // Quay về trang chủ
+            navigate('/');
         } catch (err) {
             console.error(err);
-            alert('Lỗi upload: ' + (err.response?.data?.message || err.message));
+            notify({
+                type: 'error',
+                title: 'Không thể upload',
+                message: err.response?.data?.message || err.message
+            });
         } finally {
             setLoading(false);
         }

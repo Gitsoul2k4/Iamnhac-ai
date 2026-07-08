@@ -30,11 +30,13 @@ exports.getPlaylistById = async (req, res) => {
 exports.createPlaylist = async (req, res) => {
   try {
     // Nhận cả 'songs' (mảng) và 'songId' (đơn lẻ) để linh hoạt
-    const { title, userId, songs, songId } = req.body; 
+    const { title, userId, songs, songIds, songId } = req.body; 
 
     let initialSongs = [];
     if (songs && Array.isArray(songs)) {
         initialSongs = songs; // Ưu tiên mảng songs từ trang chủ
+    } else if (songIds && Array.isArray(songIds)) {
+        initialSongs = songIds;
     } else if (songId) {
         initialSongs = [songId]; // Nếu chỉ có 1 bài lẻ
     }

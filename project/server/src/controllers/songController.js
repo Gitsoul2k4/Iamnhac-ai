@@ -1,6 +1,6 @@
 const Song = require('../models/Song');
 const User = require('../models/User');
-const Playlist = require('../models/playlist');
+const Playlist = require('../models/Playlist');
 const mlService = require('../services/mlService'); // === MACHINE LEARNING (mới) ===
 const path = require('path');
 const fs = require('fs');

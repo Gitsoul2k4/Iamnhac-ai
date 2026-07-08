@@ -5,6 +5,7 @@ import { BrowserRouter as Router, Routes, Route, Link, useParams, Navigate } fro
 import { MusicProvider } from './context/MusicContext'; // Đảm bảo đúng đường dẫn tới file MusicContext.js
 import GlobalPlayer from './components/GlobalPlayer';   // Đảm bảo đúng đường dẫn tới file GlobalPlayer.jsx
 import MoodBubble from './components/MoodBubble/MoodBubble'; // === AI AGENT: bubble khai báo tâm trạng (Nhóm 3) ===
+import { useNotification } from './components/NotificationProvider';
 
 // --- IMPORT CÁC TRANG ---
 import Home from './pages/Home/Home';
@@ -14,6 +15,8 @@ import Profile from './pages/Profile/Profile';
 import Login from './pages/Auth/Login';
 import Register from './pages/Auth/Register';
 import AdminUpload from './pages/Admin/AdminUpload';
+import Library from './pages/Library/Library';
+import PlaylistDetail from './pages/Playlist/PlaylistDetail';
 
 // --- STYLES (Giữ nguyên phong cách của bạn) ---
 const navBarStyle = { padding: '10px 40px', background: '#1db954', display: 'flex', justifyContent: 'space-between', alignItems: 'center', color: 'white', position: 'sticky', top: 0, zIndex: 1000 };
@@ -26,9 +29,6 @@ const profileLinkStyle = { textDecoration: 'none', color: 'white', display: 'fle
 const avatarStyle = { width: '30px', height: '30px', background: '#fff', color: '#1db954', borderRadius: '50%', display: 'flex', alignItems: 'center', justifyContent: 'center', fontWeight: 'bold' };
 const footerStyle = { textAlign: 'center', padding: '40px', color: '#888', background: '#f8f9fa', marginTop: '40px' };
 
-const UserPlaylists = () => <div style={{padding: '100px', textAlign: 'center'}}><h2>🎧 Thư viện Playlist</h2><p>Đang tải danh sách...</p></div>;
-const PlaylistDetail = () => <div style={{padding: '100px', textAlign: 'center'}}><h2>🎶 Đang phát Playlist</h2></div>;
-
 const ProfileWrapper = () => {
   const { userId } = useParams();
   return <Profile key={userId} />;
@@ -36,6 +36,7 @@ const ProfileWrapper = () => {
 
 function App() {
   const [user, setUser] = useState(JSON.parse(localStorage.getItem('user')));
+  const { showConfirm } = useNotification();
 
   useEffect(() => {
     const handleStorage = () => setUser(JSON.parse(localStorage.getItem('user')));
@@ -43,12 +44,20 @@ function App() {
     return () => window.removeEventListener('storage', handleStorage);
   }, []);
 
-  const handleLogout = () => {
-    if(window.confirm("Bạn muốn đăng xuất?")) {
-        localStorage.clear();
-        setUser(null);
-        window.location.href = '/login';
-    }
+  const handleLogout = async () => {
+    const shouldLogout = await showConfirm({
+      type: 'logout',
+      title: 'Đăng xuất khỏi IAMNHAC?',
+      message: 'Bạn sẽ cần đăng nhập lại để đăng nhạc, tạo playlist và quản lý thư viện cá nhân.',
+      confirmText: 'Đăng xuất',
+      cancelText: 'Ở lại'
+    });
+
+    if (!shouldLogout) return;
+
+    localStorage.clear();
+    setUser(null);
+    window.location.href = '/login';
   };
 
   return (
@@ -99,7 +108,7 @@ function App() {
               <Route path="/profile/:userId" element={<ProfileWrapper />} />
               
               <Route path="/upload" element={user ? <AdminUpload /> : <Navigate to="/login" />} />
-              <Route path="/playlists/user/:userId" element={user ? <UserPlaylists /> : <Navigate to="/login" />} />
+              <Route path="/playlists/user/:userId" element={user ? <Library /> : <Navigate to="/login" />} />
               <Route path="/playlist/:playlistId" element={<PlaylistDetail />} />
               
               <Route path="*" element={<Navigate to="/" />} />
