@@ -5,17 +5,8 @@
 // chí tìm nhạc (categories/keywords/preferredArtists) dưới dạng JSON để
 // Backend dùng truy vấn MongoDB, rồi xếp hạng bằng lớp Machine Learning
 // (mlService.js) trước khi trả bài hát thật cho người dùng.
-//
-// ĐÃ BỎ: Nhóm 1 (Temporal Context) và Nhóm 2 (Explicit Feedback: lượt
-// nghe + lượt Like) — AI Agent giờ CHỈ dựa vào nội dung hội thoại trực tiếp.
 // =============================================================================
 
-// --- Model: đọc từ .env để dễ đổi mà không cần sửa code / build lại ---
-// Mặc định dùng 'gemini-2.5-flash' — model MIỄN PHÍ mạnh nhất hiện có thể
-// dùng ổn định với hạn mức free-tier rộng rãi trên Google AI Studio (không
-// cần khai báo thanh toán). Nếu Google phát hành model mới miễn phí mạnh
-// hơn sau thời điểm này, chỉ cần đổi GEMINI_MODEL trong file .env, KHÔNG
-// cần sửa file này. Kiểm tra hạn mức/model mới nhất tại:
 // https://ai.google.dev/gemini-api/docs/pricing
 const GEMINI_MODEL = process.env.GEMINI_MODEL || 'gemini-2.5-flash';
 const GEMINI_URL = `https://generativelanguage.googleapis.com/v1beta/models/${GEMINI_MODEL}:generateContent`;

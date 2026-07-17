@@ -1,11 +1,6 @@
 const mongoose = require('mongoose');
 
 // =============================================================================
-// ChatMessage — NGUỒN DỮ LIỆU DUY NHẤT của AI Agent sau khi tinh giản.
-// Đã bỏ hẳn Nhóm 1 (Temporal Context / giờ giấc truy cập) và Nhóm 2
-// (Explicit Feedback / lượt nghe + lượt Like). Giờ đây AI Agent CHỈ giao tiếp
-// và học ngữ cảnh qua đúng 1 kênh: bubble chat giữa người dùng và AI Agent.
-//
 // Mỗi lượt chat (của người dùng lẫn của AI Agent) được lưu thành 1 document
 // để: (1) hiển thị lại lịch sử hội thoại khi người dùng mở lại bubble,
 // (2) làm ngữ cảnh nhiều lượt (multi-turn) gửi cho Gemini ở lần chat kế tiếp.

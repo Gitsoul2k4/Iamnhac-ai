@@ -1,16 +1,12 @@
 // =============================================================================
 // mlService.js
-// Đây là phần MACHINE LEARNING thật sự được thêm vào AI Agent (theo yêu cầu),
-// tách biệt hẳn với phần "gọi LLM để trò chuyện" ở geminiService.js:
-//
 //   1) Biểu diễn (Representation Learning): dùng model embedding của Gemini để
 //      biến mỗi bài hát ("title - artist - category") và mỗi câu chat của
 //      người dùng thành 1 vector số thực nhiều chiều.
 //   2) Suy luận (Inference): dùng thuật toán k-Nearest Neighbors — đo độ
 //      tương đồng Cosine Similarity giữa vector câu chat và vector từng bài
 //      hát ứng viên — để XẾP HẠNG bài hát nào "gần" với ý muốn của người
-//      dùng nhất. Đây là kỹ thuật Machine Learning kinh điển cho hệ gợi ý
-//      (Content-based Filtering bằng Vector Similarity Search).
+//      dùng nhất.
 //
 // Embedding của mỗi bài hát được tính 1 lần rồi LƯU CACHE vào Song.embedding
 // (MongoDB) để các lượt chat sau không cần gọi lại API => vừa nhanh vừa tiết
