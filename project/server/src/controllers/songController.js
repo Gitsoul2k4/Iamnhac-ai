@@ -121,9 +121,31 @@ exports.getUserInfo = async (req, res) => {
 // Cập nhật Profile User (Sửa Bio, Tên)
 exports.updateProfile = async (req, res) => {
   try {
-    const user = await User.findByIdAndUpdate(req.params.id, req.body, { new: true });
+    const { requesterId, role, username, bio } = req.body;
+
+    // FIX BẢO MẬT: trước đây route này dùng req.body trực tiếp làm dữ liệu update
+    // (findByIdAndUpdate(req.params.id, req.body)) — nghĩa là bất kỳ ai cũng có thể
+    // gửi { "role": "admin" } hoặc đổi password/email của BẤT KỲ user nào khác,
+    // vì không hề kiểm tra người gọi có phải chủ tài khoản hay không.
+    if (!requesterId) {
+      return res.status(401).json({ message: "Thiếu thông tin xác thực người dùng" });
+    }
+    const isOwner = requesterId.toString() === req.params.id.toString();
+    const isAdmin = role === 'admin';
+    if (!isOwner && !isAdmin) {
+      return res.status(403).json({ message: "Bạn không có quyền chỉnh sửa hồ sơ này" });
+    }
+
+    // Chỉ cho phép cập nhật đúng 2 field công khai này qua route này.
+    // Đổi email/password/role phải đi qua các luồng riêng có xác thực chặt hơn.
+    const allowedUpdates = {};
+    if (username !== undefined) allowedUpdates.username = username;
+    if (bio !== undefined) allowedUpdates.bio = bio;
+
+    const user = await User.findByIdAndUpdate(req.params.id, allowedUpdates, { new: true }).select('-password');
+    if (!user) return res.status(404).json({ message: "User không tồn tại" });
     res.json(user);
-  } catch (err) { res.status(500).json(err); }
+  } catch (err) { res.status(500).json({ message: err.message }); }
 };
 
 // Chức năng Tạo Playlist

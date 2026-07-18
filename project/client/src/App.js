@@ -11,7 +11,7 @@ import { useNotification } from './components/NotificationProvider';
 import Home from './pages/Home/Home';
 import SearchPage from './pages/Search/Search';
 import Ranking from './pages/Ranking/Ranking';
-import Profile from './pages/Profile/Profile';
+import Profile from './pages/Pages/Profile'; // FIX: trước đây trỏ nhầm vào bản stub rỗng ở pages/Profile/Profile.jsx
 import Login from './pages/Auth/Login';
 import Register from './pages/Auth/Register';
 import AdminUpload from './pages/Admin/AdminUpload';

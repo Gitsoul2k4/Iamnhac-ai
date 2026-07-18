@@ -9,11 +9,42 @@ const Profile = () => {
   const navigate = useNavigate();
   const [user, setUser] = useState(null);
   const [songs, setSongs] = useState([]);
+  const [isEditing, setIsEditing] = useState(false);
+  const [editForm, setEditForm] = useState({ username: '', bio: '' });
+  const [saving, setSaving] = useState(false);
   const loggedInUser = JSON.parse(localStorage.getItem('user'));
   const { notify, showConfirm } = useNotification();
 
   // Kiểm tra xem đây có phải là trang của chính người đang đăng nhập không
   const isOwner = loggedInUser?._id === userId || loggedInUser?.id === userId;
+
+  const handleStartEdit = () => {
+    setEditForm({ username: user.username || '', bio: user.bio || '' });
+    setIsEditing(true);
+  };
+
+  const handleSaveProfile = async () => {
+    setSaving(true);
+    try {
+      const res = await axios.put(`http://localhost:5000/api/songs/user/${userId}`, {
+        requesterId: loggedInUser._id || loggedInUser.id,
+        role: loggedInUser.role,
+        username: editForm.username,
+        bio: editForm.bio
+      });
+      setUser(res.data);
+      setIsEditing(false);
+      notify({ type: 'success', title: 'Đã lưu hồ sơ', message: 'Thông tin của bạn đã được cập nhật.' });
+    } catch (err) {
+      notify({
+        type: 'error',
+        title: 'Không thể lưu hồ sơ',
+        message: err.response?.data?.message || 'Vui lòng thử lại sau.'
+      });
+    } finally {
+      setSaving(false);
+    }
+  };
 
   useEffect(() => {
     // 1. Lấy thông tin User
@@ -63,14 +94,47 @@ const Profile = () => {
         </div>
         <div style={userInfoStyle}>
           <span style={roleBadge}>{user.role === 'admin' ? 'Quản trị viên' : 'Nghệ sĩ'}</span>
-          <h1 style={userNameStyle}>{user.username}</h1>
-          <div style={statsStyle}>
-            <div style={statItem}><strong>{songs.length}</strong> bài hát</div>
-            <div style={statItem}>
-                <strong>{songs.reduce((acc, s) => acc + (s.likes?.length || 0), 0)}</strong> lượt thích
+
+          {isEditing ? (
+            <div style={editFormStyle}>
+              <input
+                style={editInputStyle}
+                value={editForm.username}
+                onChange={(e) => setEditForm({ ...editForm, username: e.target.value })}
+                placeholder="Tên hiển thị"
+              />
+              <textarea
+                style={editTextareaStyle}
+                value={editForm.bio}
+                onChange={(e) => setEditForm({ ...editForm, bio: e.target.value.slice(0, 200) })}
+                placeholder="Viết vài dòng giới thiệu về bạn..."
+                maxLength={200}
+                rows={3}
+              />
+              <div style={{ display: 'flex', gap: '10px' }}>
+                <button style={saveBtnStyle} onClick={handleSaveProfile} disabled={saving}>
+                  {saving ? 'Đang lưu...' : 'Lưu thay đổi'}
+                </button>
+                <button style={cancelBtnStyle} onClick={() => setIsEditing(false)} disabled={saving}>
+                  Hủy
+                </button>
+              </div>
             </div>
-          </div>
-          <p style={bioStyle}>{user.bio || "Chưa có tiểu sử công khai."}</p>
+          ) : (
+            <>
+              <h1 style={userNameStyle}>{user.username}</h1>
+              <div style={statsStyle}>
+                <div style={statItem}><strong>{songs.length}</strong> bài hát</div>
+                <div style={statItem}>
+                    <strong>{songs.reduce((acc, s) => acc + (s.likes?.length || 0), 0)}</strong> lượt thích
+                </div>
+              </div>
+              <p style={bioStyle}>{user.bio || "Chưa có tiểu sử công khai."}</p>
+              {isOwner && (
+                <button style={editProfileBtnStyle} onClick={handleStartEdit}>Chỉnh sửa hồ sơ</button>
+              )}
+            </>
+          )}
         </div>
       </div>
 
@@ -134,6 +198,12 @@ const roleBadge = { background: '#e1f5fe', color: '#01579b', padding: '4px 12px'
 const statsStyle = { display: 'flex', gap: '20px', marginBottom: '15px' };
 const statItem = { fontSize: '16px', color: '#555' };
 const bioStyle = { color: '#888', fontStyle: 'italic' };
+const editProfileBtnStyle = { marginTop: '12px', padding: '8px 18px', border: '1px solid #1db954', color: '#1db954', borderRadius: '20px', background: 'none', cursor: 'pointer', fontWeight: '600' };
+const editFormStyle = { display: 'flex', flexDirection: 'column', gap: '10px', marginTop: '10px', maxWidth: '420px' };
+const editInputStyle = { padding: '10px 14px', borderRadius: '10px', border: '1px solid #ddd', fontSize: '16px', fontWeight: 'bold' };
+const editTextareaStyle = { padding: '10px 14px', borderRadius: '10px', border: '1px solid #ddd', fontSize: '14px', resize: 'none', fontFamily: 'inherit' };
+const saveBtnStyle = { padding: '8px 20px', background: '#1db954', color: 'white', border: 'none', borderRadius: '20px', cursor: 'pointer', fontWeight: '600' };
+const cancelBtnStyle = { padding: '8px 20px', background: '#eee', color: '#333', border: 'none', borderRadius: '20px', cursor: 'pointer' };
 
 const songListContainer = { display: 'flex', flexDirection: 'column', gap: '10px' };
 const songRowStyle = { display: 'flex', alignItems: 'center', padding: '12px 20px', borderRadius: '10px', background: '#fff', transition: 'all 0.2s', cursor: 'pointer', border: '1px solid transparent', hover: { background: '#f9f9f9' } };
