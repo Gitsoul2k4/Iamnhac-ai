@@ -1,2 +1,5 @@
 project/server/uploads/ 
 project/server/.env
+project/node_modules/
+project/server/node_modules/
+project/client/node_modules/
