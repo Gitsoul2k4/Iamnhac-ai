@@ -2,6 +2,7 @@ const Song = require('../models/Song');
 const User = require('../models/User');
 const Playlist = require('../models/Playlist');
 const mlService = require('../services/mlService'); // === MACHINE LEARNING (mới) ===
+const audioTranscodeService = require('../services/audioTranscodeService'); // === CHẤT LƯỢNG ÂM THANH (mới) ===
 const path = require('path');
 const fs = require('fs');
 
@@ -51,6 +52,21 @@ exports.createSong = async (req, res) => {
         if (vec) return Song.findByIdAndUpdate(newSong._id, { embedding: vec });
       })
       .catch((err) => console.error('[songController] Lỗi tính embedding khi upload:', err.message));
+
+    // === CHẤT LƯỢNG ÂM THANH (mới) ===
+    // Tạo thêm bản 96kbps để trình phát có thể chuyển sang "chất lượng thấp"
+    // khi người dùng muốn tiết kiệm dữ liệu di động. Chạy ngầm, không chặn
+    // response upload; nếu ffmpeg lỗi/chưa cài, trình phát sẽ tự dùng lại
+    // file gốc (xem songUrlLow default rỗng trong Song.js).
+    if (req.files['songFile']) {
+      const originalAbsPath = req.files['songFile'][0].path;
+      const filename = req.files['songFile'][0].filename;
+      audioTranscodeService.transcodeToLowQuality(originalAbsPath, filename)
+        .then((lowUrl) => {
+          if (lowUrl) return Song.findByIdAndUpdate(newSong._id, { songUrlLow: lowUrl });
+        })
+        .catch((err) => console.error('[songController] Lỗi transcode chất lượng thấp:', err.message));
+    }
   } catch (err) { res.status(500).json({ message: err.message }); }
 };
 
@@ -78,6 +94,50 @@ exports.toggleLike = async (req, res) => {
     console.error("Lỗi tại toggleLike:", err);
     res.status(500).json({ message: "Lỗi Server nội bộ" });
   }
+};
+
+// Sửa thông tin bài hát (Admin hoặc chính chủ) — hoàn thiện CRUD cho nhạc
+exports.updateSong = async (req, res) => {
+  try {
+    const { requesterId, role, title, artist, category } = req.body;
+    const song = await Song.findById(req.params.id);
+    if (!song) return res.status(404).json({ message: "Không tìm thấy nhạc" });
+
+    const isOwner = requesterId && song.userId && song.userId.toString() === requesterId.toString();
+    const isAdmin = role === 'admin';
+    if (!isOwner && !isAdmin) {
+      return res.status(403).json({ message: "Bạn không có quyền chỉnh sửa bài hát này" });
+    }
+
+    if (title !== undefined) song.title = title;
+    if (artist !== undefined) song.artist = artist;
+    if (category !== undefined) song.category = category;
+    await song.save();
+    res.json(song);
+
+    // Thể loại/tên bài hát đổi -> tính lại embedding để AI Agent gợi ý vẫn chính xác
+    mlService.embedText(`${song.title} - ${song.artist} - ${song.category || ''}`)
+      .then((vec) => { if (vec) return Song.findByIdAndUpdate(song._id, { embedding: vec }); })
+      .catch((err) => console.error('[songController] Lỗi tính lại embedding sau khi sửa:', err.message));
+  } catch (err) { res.status(500).json({ message: err.message }); }
+};
+
+// Upload / đổi ảnh đại diện (Avatar) — dùng chung cho cả Admin và User thường
+exports.uploadAvatar = async (req, res) => {
+  try {
+    const { requesterId, role } = req.body;
+    const isOwner = requesterId && requesterId.toString() === req.params.id.toString();
+    const isAdmin = role === 'admin';
+    if (!isOwner && !isAdmin) {
+      return res.status(403).json({ message: "Bạn không có quyền đổi ảnh đại diện này" });
+    }
+    if (!req.file) return res.status(400).json({ message: "Thiếu file ảnh" });
+
+    const avatarUrl = '/uploads/images/' + req.file.filename;
+    const user = await User.findByIdAndUpdate(req.params.id, { avatar: avatarUrl }, { new: true }).select('-password');
+    if (!user) return res.status(404).json({ message: "User không tồn tại" });
+    res.json(user);
+  } catch (err) { res.status(500).json({ message: err.message }); }
 };
 
 // Xóa bài hát (Kiểm tra quyền Admin hoặc Chủ bài viết)

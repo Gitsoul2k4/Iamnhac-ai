@@ -1,7 +1,7 @@
-import React, { useEffect, useState } from 'react';
+import React, { useEffect, useState, useRef } from 'react';
 import axios from 'axios';
 import { useParams, useNavigate } from 'react-router-dom';
-import { Music, Heart, Trash2, Play, User as UserIcon, Calendar } from 'lucide-react';
+import { Music, Heart, Trash2, Play, User as UserIcon, Camera } from 'lucide-react';
 import { useNotification } from '../../components/NotificationProvider';
 
 const Profile = () => {
@@ -12,11 +12,15 @@ const Profile = () => {
   const [isEditing, setIsEditing] = useState(false);
   const [editForm, setEditForm] = useState({ username: '', bio: '' });
   const [saving, setSaving] = useState(false);
+  const [uploadingAvatar, setUploadingAvatar] = useState(false);
+  const avatarInputRef = useRef(null);
   const loggedInUser = JSON.parse(localStorage.getItem('user'));
   const { notify, showConfirm } = useNotification();
 
   // Kiểm tra xem đây có phải là trang của chính người đang đăng nhập không
   const isOwner = loggedInUser?._id === userId || loggedInUser?.id === userId;
+  // Admin được phép đổi avatar hộ người khác (khớp quyền hạn phía backend)
+  const canEditAvatar = isOwner || loggedInUser?.role === 'admin';
 
   const handleStartEdit = () => {
     setEditForm({ username: user.username || '', bio: user.bio || '' });
@@ -43,6 +47,51 @@ const Profile = () => {
       });
     } finally {
       setSaving(false);
+    }
+  };
+
+  const handleAvatarClick = () => {
+    if (canEditAvatar) avatarInputRef.current?.click();
+  };
+
+  const handleAvatarChange = async (e) => {
+    const file = e.target.files[0];
+    e.target.value = ''; // cho phép chọn lại cùng 1 file lần sau nếu cần
+    if (!file) return;
+
+    if (!file.type.startsWith('image/')) {
+      notify({ type: 'warning', title: 'File không hợp lệ', message: 'Vui lòng chọn 1 file ảnh (jpg, png...).' });
+      return;
+    }
+
+    setUploadingAvatar(true);
+    const formData = new FormData();
+    formData.append('avatarFile', file);
+    formData.append('requesterId', loggedInUser._id || loggedInUser.id);
+    formData.append('role', loggedInUser.role);
+
+    try {
+      const res = await axios.post(`http://localhost:5000/api/songs/avatar/${userId}`, formData, {
+        headers: { 'Content-Type': 'multipart/form-data' }
+      });
+      setUser(res.data);
+
+      // Nếu đang tự đổi avatar của chính mình -> cập nhật luôn cache ở localStorage
+      // để avatar mới hiển thị ngay trên thanh điều hướng mà không cần đăng nhập lại.
+      if (isOwner) {
+        localStorage.setItem('user', JSON.stringify({ ...loggedInUser, avatar: res.data.avatar }));
+        window.dispatchEvent(new Event('storage'));
+      }
+
+      notify({ type: 'success', title: 'Đã đổi ảnh đại diện', message: 'Ảnh đại diện mới đã được cập nhật.' });
+    } catch (err) {
+      notify({
+        type: 'error',
+        title: 'Không thể tải ảnh lên',
+        message: err.response?.data?.message || 'Vui lòng thử lại sau.'
+      });
+    } finally {
+      setUploadingAvatar(false);
     }
   };
 
@@ -89,8 +138,28 @@ const Profile = () => {
       
       {/* HEADER HỒ SƠ */}
       <div style={headerStyle}>
-        <div style={avatarContainer}>
-          <UserIcon size={80} color="#fff" />
+        <div style={avatarWrapperStyle}>
+          <div style={avatarContainer} onClick={handleAvatarClick} title={canEditAvatar ? 'Đổi ảnh đại diện' : undefined}>
+            {user.avatar ? (
+              <img src={`http://localhost:5000${user.avatar}`} alt="avatar" style={avatarImgStyle} />
+            ) : (
+              <UserIcon size={80} color="#fff" />
+            )}
+          </div>
+          {canEditAvatar && (
+            <>
+              <button style={avatarEditBtnStyle} onClick={handleAvatarClick} disabled={uploadingAvatar} title="Đổi ảnh đại diện">
+                <Camera size={16} />
+              </button>
+              <input
+                type="file"
+                accept="image/*"
+                ref={avatarInputRef}
+                onChange={handleAvatarChange}
+                style={{ display: 'none' }}
+              />
+            </>
+          )}
         </div>
         <div style={userInfoStyle}>
           <span style={roleBadge}>{user.role === 'admin' ? 'Quản trị viên' : 'Nghệ sĩ'}</span>
@@ -191,7 +260,10 @@ const Profile = () => {
 
 // --- STYLES ---
 const headerStyle = { display: 'flex', alignItems: 'center', gap: '40px', marginBottom: '20px' };
-const avatarContainer = { width: '150px', height: '150px', borderRadius: '50%', background: 'linear-gradient(45deg, #1db954, #191414)', display: 'flex', alignItems: 'center', justifyContent: 'center', boxShadow: '0 10px 20px rgba(0,0,0,0.1)' };
+const avatarContainer = { width: '150px', height: '150px', borderRadius: '50%', background: 'linear-gradient(45deg, #1db954, #191414)', display: 'flex', alignItems: 'center', justifyContent: 'center', boxShadow: '0 10px 20px rgba(0,0,0,0.1)', overflow: 'hidden' };
+const avatarWrapperStyle = { position: 'relative', flexShrink: 0 };
+const avatarImgStyle = { width: '100%', height: '100%', objectFit: 'cover' };
+const avatarEditBtnStyle = { position: 'absolute', bottom: '6px', right: '6px', width: '36px', height: '36px', borderRadius: '50%', background: '#1db954', color: '#fff', border: '3px solid #fff', display: 'flex', alignItems: 'center', justifyContent: 'center', cursor: 'pointer', boxShadow: '0 2px 8px rgba(0,0,0,0.25)' };
 const userInfoStyle = { flex: 1 };
 const userNameStyle = { fontSize: '48px', margin: '10px 0', fontWeight: 'bold' };
 const roleBadge = { background: '#e1f5fe', color: '#01579b', padding: '4px 12px', borderRadius: '20px', fontSize: '12px', fontWeight: 'bold', textTransform: 'uppercase' };

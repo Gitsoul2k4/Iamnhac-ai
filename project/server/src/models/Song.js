@@ -23,6 +23,13 @@ const songSchema = new mongoose.Schema({
   // API lại mỗi lần gợi ý. AI Agent dùng vector này để so khớp bằng thuật
   // toán Cosine Similarity / k-Nearest Neighbors với ngữ cảnh chat của người
   // dùng (xem server/src/services/mlService.js).
+  // === CHẤT LƯỢNG ÂM THANH (mới) ===
+  // Bản nhạc nén ở bitrate thấp hơn (96kbps), được tạo tự động bằng ffmpeg khi
+  // upload, dùng cho lựa chọn "Chất lượng thấp / Tiết kiệm dữ liệu" ở trình
+  // phát nhạc. Nếu rỗng (ffmpeg lỗi hoặc bài hát cũ chưa được xử lý), trình
+  // phát sẽ tự động dùng lại songUrl gốc.
+  songUrlLow: { type: String, default: '' },
+
   embedding: { type: [Number], default: [] }
 });
 

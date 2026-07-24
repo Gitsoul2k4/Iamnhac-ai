@@ -23,6 +23,8 @@ router.get('/info/:userId', songController.getUserInfo);
 router.post('/upload', upload.fields([{ name: 'songFile' }, { name: 'imageFile' }]), songController.createSong);
 router.post('/like/:id', songController.toggleLike);
 router.put('/user/:id', songController.updateProfile);
+router.put('/:id', songController.updateSong); // CRUD: sửa bài hát (Admin hoặc chủ sở hữu)
+router.post('/avatar/:id', upload.single('avatarFile'), songController.uploadAvatar); // Upload ảnh đại diện
 router.delete('/:id', songController.deleteSong);
 router.post('/playlists', songController.createPlaylist); // Khớp với Home.jsx: /api/songs/playlists
 router.get('/ranking', songController.getRanking);

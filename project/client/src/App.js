@@ -15,6 +15,7 @@ import Profile from './pages/Pages/Profile'; // FIX: trước đây trỏ nhầm
 import Login from './pages/Auth/Login';
 import Register from './pages/Auth/Register';
 import AdminUpload from './pages/Admin/AdminUpload';
+import AdminDashboard from './pages/Admin/AdminDashboard'; // Trang quản trị: CRUD nhạc của mọi user
 import Library from './pages/Library/Library';
 import PlaylistDetail from './pages/Playlist/PlaylistDetail';
 
@@ -27,7 +28,8 @@ const registerBtnStyle = { textDecoration: 'none', color: 'white', fontWeight: '
 const logoutBtnStyle = { padding: '6px 15px', background: '#ff4d4d', color: 'white', border: 'none', borderRadius: '20px', cursor: 'pointer' };
 const profileLinkStyle = { textDecoration: 'none', color: 'white', display: 'flex', alignItems: 'center', gap: '8px' };
 const avatarStyle = { width: '30px', height: '30px', background: '#fff', color: '#1db954', borderRadius: '50%', display: 'flex', alignItems: 'center', justifyContent: 'center', fontWeight: 'bold' };
-const footerStyle = { textAlign: 'center', padding: '40px', color: '#888', background: '#f8f9fa', marginTop: '40px' };
+const avatarImgStyle = { width: '30px', height: '30px', borderRadius: '50%', objectFit: 'cover', border: '2px solid rgba(255,255,255,0.6)' };
+const footerStyle = { textAlign: 'center', padding: '40px', color: '#bbb', background: '#000', marginTop: '40px' };
 
 const ProfileWrapper = () => {
   const { userId } = useParams();
@@ -76,6 +78,9 @@ function App() {
                 <>
                   <Link to="/upload" style={uploadBtnStyle}>📤 Đăng nhạc</Link>
                   <Link to={`/playlists/user/${user._id || user.id}`} style={navLinkStyle}>📚 Thư viện</Link>
+                  {user.role === 'admin' && (
+                    <Link to="/admin" style={navLinkStyle}>🛠️ Quản trị</Link>
+                  )}
                 </>
               )}
             </div>
@@ -84,7 +89,11 @@ function App() {
               {user ? (
                 <div style={{ display: 'flex', alignItems: 'center', gap: '15px' }}>
                   <Link to={`/profile/${user._id || user.id}`} style={profileLinkStyle}>
-                    <div style={avatarStyle}>{String(user.username || 'U').charAt(0).toUpperCase()}</div>
+                    {user.avatar ? (
+                      <img src={`http://localhost:5000${user.avatar}`} alt="" style={avatarImgStyle} />
+                    ) : (
+                      <div style={avatarStyle}>{String(user.username || 'U').charAt(0).toUpperCase()}</div>
+                    )}
                     <span>{String(user.username)} {user.role === 'admin' ? '⭐ (Admin)' : ''}</span>
                   </Link>
                   <button onClick={handleLogout} style={logoutBtnStyle}>🚪 Thoát</button>
@@ -108,6 +117,7 @@ function App() {
               <Route path="/profile/:userId" element={<ProfileWrapper />} />
               
               <Route path="/upload" element={user ? <AdminUpload /> : <Navigate to="/login" />} />
+              <Route path="/admin" element={user?.role === 'admin' ? <AdminDashboard /> : <Navigate to="/" />} />
               <Route path="/playlists/user/:userId" element={user ? <Library /> : <Navigate to="/login" />} />
               <Route path="/playlist/:playlistId" element={<PlaylistDetail />} />
               
