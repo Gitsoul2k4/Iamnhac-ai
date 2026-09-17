@@ -245,16 +245,16 @@ Không commit file `.env` hay bất kỳ API key thật nào lên repository —
 
 Sản phẩm **IamNhac AI** là kết quả bài tập lớn môn **Trí tuệ nhân tạo**, đề tài *"Hệ thống AI Agent gợi ý nhạc theo yêu cầu người dùng"*, Viện Công nghệ thông tin và Điện, Điện tử — Trường Đại học Giao thông vận tải TP. Hồ Chí Minh.
 
-| STT | MSSV          | Họ & Tên             | Vai trò                        |
-| --- | ------------- | ---------------------- | --------------------------------- |
+| STT | MSSV          | Họ & Tên               | Vai trò                          |
+| --- | ------------- | ---------------------- | ---------------------------------|
 | 1   | 2251120025    | Nguyễn Thanh Lâm       | Backend & Tích hợp AI Agent      |
 | 2   | 2551120018    | Trần Gia Huy           | Backend & Tích hợp AI Agent      |
 | 3   | 2251120010    | Phạm Nguyên Đồng       | Thiết kế CSDL & Soạn báo cáo     |
-| 4   | 087205001792  | Lê Hữu Đan             | Frontend & Soạn báo cáo          |
-| 5   | 083305001180  | Dương Bích Tuyền       | Vẽ sơ đồ & Soạn báo cáo          |
-| 6   | 084205001680  | Nguyễn Thành Đạt       | Frontend & Soạn báo cáo          |
+| 4   |               | Lê Hữu Đan             | Frontend & Soạn báo cáo          |
+| 5   |               | Dương Bích Tuyền       | Vẽ sơ đồ & Soạn báo cáo          |
+| 6   |               | Nguyễn Thành Đạt       | Frontend & Soạn báo cáo          |
 
-Giảng viên hướng dẫn: **Thầy Bùi Trọng Hiếu**
+Giảng viên hướng dẫn: **Ths. Bùi Trọng Hiếu**
 
 ## License
 
